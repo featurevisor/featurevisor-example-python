@@ -1,17 +1,8 @@
 # featurevisor-example-python
 
-Tiny example application using the Featurevisor Python SDK.
+Tiny example application using the [Featurevisor Python SDK](https://github.com/featurevisor/featurevisor-python).
 
-It mirrors the Go example by:
-
-- fetching a remote Featurevisor datafile,
-- creating a Featurevisor instance,
-- setting evaluation context inside the script,
-- printing whether a feature is enabled.
-
-The example uses this datafile:
-
-[https://featurevisor-example-cloudflare.pages.dev/production/featurevisor-tag-all.json](https://featurevisor-example-cloudflare.pages.dev/production/featurevisor-tag-all.json)
+Learn more about Featurevisor at [featurevisor.com](https://featurevisor.com).
 
 ## Requirements
 
@@ -37,10 +28,14 @@ The script fetches the remote datafile, builds a Featurevisor instance, sets thi
 
 ```json
 {
-  "userId": "123",
-  "deviceId": "device-23456",
-  "country": "nl"
+	"userId": "123",
+	"deviceId": "device-23456",
+	"country": "nl"
 }
 ```
 
 It evaluates `my_feature`, which exists in the sample datafile.
+
+## Featurevisor project
+
+Uses this Featurevisor project to fetch the configuration from: https://github.com/featurevisor/featurevisor-example-cloudflare
