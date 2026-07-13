@@ -5,7 +5,7 @@ import sys
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from featurevisor import create_instance
+from featurevisor import create_featurevisor
 
 DATAFILE_URL = "https://featurevisor-example-cloudflare.pages.dev/production/featurevisor-tag-all.json"
 FEATURE_KEY = "my_feature"
@@ -36,7 +36,7 @@ def fetch_datafile(url: str) -> dict:
 def main() -> int:
     try:
         datafile = fetch_datafile(DATAFILE_URL)
-        f = create_instance({"datafile": datafile, "logLevel": "error"})
+        f = create_featurevisor({"datafile": datafile, "logLevel": "error"})
         f.set_context(CONTEXT)
         enabled = f.is_enabled(FEATURE_KEY)
     except Exception as exc:
