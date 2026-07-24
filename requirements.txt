@@ -1,1 +1,1 @@
-featurevisor==1.0.0
+featurevisor==2.0.0
