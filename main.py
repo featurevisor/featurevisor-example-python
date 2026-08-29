@@ -7,25 +7,26 @@ from urllib.request import Request, urlopen
 
 from featurevisor import create_featurevisor
 
-DATAFILE_URL = "https://featurevisor-example-cloudflare.pages.dev/production/featurevisor-tag-all.json"
-FEATURE_KEY = "my_feature"
+DATAFILE_URL = "https://featurevisor-example-cloudflare.pages.dev/production/featurevisor-sdk-v3.json"
 CONTEXT = {
-    "userId": "123",
-    "deviceId": "device-23456",
+    "userId": "customer-123",
     "country": "nl",
+    "locale": "nl-NL",
+    "accountPlan": "pro",
 }
 
 
 def fetch_datafile(url: str) -> dict:
+    request = Request(
+        url,
+        headers={
+            "User-Agent": "featurevisor-example-python/1.0",
+            "Accept": "application/json",
+        },
+    )
+
     try:
-        request = Request(
-            url,
-            headers={
-                "User-Agent": "featurevisor-example-python/1.0",
-                "Accept": "application/json",
-            },
-        )
-        with urlopen(request) as response:
+        with urlopen(request, timeout=10) as response:
             return json.load(response)
     except HTTPError as exc:
         raise RuntimeError(f"failed to fetch datafile: HTTP {exc.code}") from exc
@@ -34,20 +35,46 @@ def fetch_datafile(url: str) -> dict:
 
 
 def main() -> int:
+    f = None
+
     try:
-        datafile = fetch_datafile(DATAFILE_URL)
-        f = create_featurevisor({"datafile": datafile, "logLevel": "error"})
-        f.set_context(CONTEXT)
-        enabled = f.is_enabled(FEATURE_KEY)
+        f = create_featurevisor(
+            {
+                "datafile": fetch_datafile(DATAFILE_URL),
+                "context": CONTEXT,
+                "logLevel": "error",
+            }
+        )
+
+        commerce_enabled = f.is_enabled("commerce_platform")
+        checkout_variation = f.get_variation("checkout_experience")
+        max_items = f.get_variable_integer("checkout_experience", "max_items")
+        payment_methods = f.get_variable_array(
+            "checkout_experience", "payment_methods"
+        )
+        endpoints = f.get_variable_object("serviceEndpoints")
+        support_contact = f.get_variable_string("supportContact")
+
+        print(f"Commerce platform enabled: {str(commerce_enabled).lower()}")
+        print(f"Checkout variation: {value_or_unavailable(checkout_variation)}")
+        print(f"Maximum checkout items: {value_or_unavailable(max_items)}")
+        print(f"Payment methods: {payment_methods or []}")
+        print(
+            f"Service endpoint: {endpoints['baseUrl']} "
+            f"(timeout: {endpoints['timeoutMs']} ms, retries: {endpoints['retries']})"
+        )
+        print(f"Support contact: {value_or_unavailable(support_contact)}")
+        return 0
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
+    finally:
+        if f is not None:
+            f.close()
 
-    print(f"Datafile revision: {f.get_revision()}")
-    print(f"Context: {json.dumps(CONTEXT)}")
-    print(f"Feature '{FEATURE_KEY}' enabled: {enabled}")
-    print(f"All evaluations: {json.dumps(f.get_all_evaluations(), sort_keys=True)}")
-    return 0
+
+def value_or_unavailable(value: object) -> object:
+    return "unavailable" if value is None else value
 
 
 if __name__ == "__main__":
